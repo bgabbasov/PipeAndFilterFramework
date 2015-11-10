@@ -38,13 +38,13 @@ namespace PipeAndFilterFramework
                     if (_input.TryRead(out input, _millisecondsTimeout, cancellationToken))
                     {
                         var output = Process(input);
-                        _output.Write(output);
+                        _output?.Write(output);
                     }
                 }
             }
             finally
             {
-                _output.MarkComplete();
+                _output?.MarkComplete();
             }
         }
         public abstract TOut Process(TIn input);
