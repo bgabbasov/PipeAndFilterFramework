@@ -7,24 +7,29 @@ namespace PipeAndFilterFramework
 {
     public abstract class Source<TOut>
     {
-        private readonly Pipe<TOut> _output;
-        private readonly int _millisecondsTimeout;
-
-        public Source(Pipe<TOut> output, int millisecondsTimeout = 300)
-        {
-            _output = output;
-            _millisecondsTimeout = millisecondsTimeout;
-        }
+        public Pipe<TOut> Output { get; set; } 
+        public int MillisecondsTimeout { get; set; }
 
         protected void Write(TOut obj)
         {
-            _output.Write(obj);
+            Output.Write(obj);
         }
-        public void Start(CancellationToken cancellationToken)
+        public Task Start(CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(() => Process(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            return Task.Factory.StartNew(() => ProcessInner(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
+        private void ProcessInner(CancellationToken cancellationToken)
+        {
+            try
+            {
+                Process(cancellationToken);
+            }
+            finally
+            {
+                Output?.MarkComplete();
+            }
+        }
         protected abstract void Process(CancellationToken cancellationToken);
     }
 }

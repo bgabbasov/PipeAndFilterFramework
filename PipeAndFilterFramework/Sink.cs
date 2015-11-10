@@ -1,33 +1,32 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PipeAndFilterFramework
 {
     public abstract class Sink<TIn>
     {
-        private readonly Pipe<TIn> _input;
-        private readonly int _millisecondsTimeout;
-
-        public Sink(Pipe<TIn> input, int millisecondsTimeout = 300)
+        protected Sink()
         {
-            _input = input;
-            _millisecondsTimeout = millisecondsTimeout;
+            MillisecondsTimeout = 300;
         }
+        public Pipe<TIn> Input { get; set; }
+        public int MillisecondsTimeout { get; set; }
 
-        public void Start(CancellationToken cancellationToken)
+        public Task Start(CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(() => ProcessInner(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            return Task.Factory.StartNew(() => ProcessInner(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private void ProcessInner(CancellationToken cancellationToken)
         {
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested) throw new TaskCanceledException();
-                if (_input.IsCompleted) break;
+                if (cancellationToken.IsCancellationRequested) break;
+                if (Input.IsCompleted) break;
 
                 TIn input;
-                if (_input.TryRead(out input, _millisecondsTimeout, cancellationToken)) Process(input);
+                if (Input.TryRead(out input, MillisecondsTimeout)) Process(input);
             }
         }
         public abstract void Process(TIn input);

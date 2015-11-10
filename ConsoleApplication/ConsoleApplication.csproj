@@ -49,6 +49,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PipeAndFilterFramework\PipeAndFilterFramework.csproj">
+      <Project>{a0bdfcee-0746-4992-b1c5-e2e64d2dbb33}</Project>
+      <Name>PipeAndFilterFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

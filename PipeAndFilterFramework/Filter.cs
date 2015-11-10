@@ -9,20 +9,18 @@ namespace PipeAndFilterFramework
 {
     public abstract class Filter<TIn, TOut>
     {
-        private readonly Pipe<TIn> _input;
-        private readonly Pipe<TOut> _output;
-        private readonly int _millisecondsTimeout;
-
-        public Filter(Pipe<TIn> input, Pipe<TOut> output, int millisecondsTimeout = 300)
+        protected Filter()
         {
-            _input = input;
-            _output = output;
-            _millisecondsTimeout = millisecondsTimeout;
+            MillisecondsTimeout = 300;
         }
 
-        public void Start(CancellationToken cancellationToken)
+        public Pipe<TIn> Input { get; set; }
+        public Pipe<TOut> Output { get; set; }
+        public int MillisecondsTimeout { get; set; }
+
+        public Task Start(CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(() => ProcessInner(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            return Task.Factory.StartNew(() => ProcessInner(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         private void ProcessInner(CancellationToken cancellationToken)
@@ -31,20 +29,20 @@ namespace PipeAndFilterFramework
             {
                 while (true)
                 {
-                    if (cancellationToken.IsCancellationRequested) throw new TaskCanceledException();
-                    if (_input.IsCompleted) break;
+                    if (cancellationToken.IsCancellationRequested) break;
+                    if (Input.IsCompleted) break;
 
                     TIn input;
-                    if (_input.TryRead(out input, _millisecondsTimeout, cancellationToken))
+                    if (Input.TryRead(out input, MillisecondsTimeout))
                     {
                         var output = Process(input);
-                        _output?.Write(output);
+                        Output?.Write(output);
                     }
                 }
             }
             finally
             {
-                _output?.MarkComplete();
+                Output?.MarkComplete();
             }
         }
         public abstract TOut Process(TIn input);
